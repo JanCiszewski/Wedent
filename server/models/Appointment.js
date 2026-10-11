@@ -9,7 +9,7 @@ const AppointmentSchema = new Schema({
     service: {type: String, required: true, trim: true},
     date: {type: Date, required: true},
     status: {type: String, enum: ["pending", "confirmed", "rejected"], default: "pending"},
-    notes: {type: String, trim: true}
+    notes: {type: String, trim: true, maxLength: 1000}
 },
 {timestamps: true}
 );

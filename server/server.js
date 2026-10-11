@@ -19,6 +19,14 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+const appointmentRoutes = require("./routes/appointmentRoutes");
+
+
+app.use(express.urlencoded({ extended: true }));
+
+
+app.use("/api/appointments", appointmentRoutes);
+
 async function startServer() {
   try {
     await connectDB();
