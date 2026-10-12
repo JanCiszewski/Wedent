@@ -55,10 +55,25 @@ const createAppointment = async (req, res) => {
             })
         }
 
-        if(isNaN(new Date(appointmentData.date).getTime()) || new Date(appointmentData.date).getTime() <= Date.now()) {
+        const dateValidationResult = appointmentDateValidation(appointmentData.date);
+
+        if(!dateValidationResult.isAvailable) {
             return res.status(400).json({
-                message: "Wybrano błędną datę"
-            })
+            message: dateValidationResult.message
+        })
+        }
+
+        const dateSearchParameters = {
+            date: appointmentData.date,
+            status: { $in: ["confirmed", "pending"] }
+        }
+
+        const existingAppointment = await Appointment.findOne(dateSearchParameters);
+
+        if(existingAppointment) {
+            return res.status(400).json({
+            message: "Termin wizyty jest już zajęty"
+        })
         }
 
         const appointment = new Appointment(appointmentData)
