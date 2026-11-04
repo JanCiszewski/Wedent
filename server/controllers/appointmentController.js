@@ -1,4 +1,5 @@
 const Appointment = require("../models/Appointment");
+const AppointmentSlot = require("../models/AppointmentSlot");
 
 const createAppointment = async (req, res) => {
     try {
@@ -62,6 +63,32 @@ const createAppointment = async (req, res) => {
             message: dateValidationResult.message
         })
         }
+
+        try {
+            const session = await Appointment.startSession();
+            await session.withTransaction( async () => {
+                //kod do wykonania
+                throw new Error("Nie udało się zapisać rezerwacji");
+
+            })
+        } catch(error) {
+            //obsługa błęddu czyli wyśweitlenie odpowiedniego statusu HTTP oraz wiadomość
+        }
+        
+        finally {
+            await session.endSession();
+        }
+
+
+
+        const existingSlot = await AppointmentSlot.findOneAndUpdate({date: appointmentData.date, status: "available"}, {status: "booked"}, {returnDocument: "after"})
+
+        if(!existingSlot) {
+            return res.status(400).json({
+            message: "Nie udało się zarezerwować tego terminu"
+        })
+        }
+
 
         const dateSearchParameters = {
             date: appointmentData.date,
