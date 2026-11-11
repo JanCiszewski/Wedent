@@ -1,5 +1,5 @@
 import { ButtonLink } from "../ui/Button"
-import "./Header.css"
+import "./Hero.css"
 
 export default function Hero() {
     return (
@@ -7,7 +7,7 @@ export default function Hero() {
                 <h1>Wedent</h1>
                 <p>Stomatologia na wyższym poziomie</p>
                 <ButtonLink shape="rounded" variant="primary" href="#booking">
-                    Umów wizyte!
+                    Umów wizytę!
                 </ButtonLink>
             </section>
     )

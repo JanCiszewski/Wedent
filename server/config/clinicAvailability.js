@@ -13,5 +13,7 @@ const schedule = workingDays.map((day) => {
 
 module.exports = {
     schedule,
-    interval
+    interval,
+    workingHours,
+    workingDays
 }

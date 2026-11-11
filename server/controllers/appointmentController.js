@@ -1,5 +1,6 @@
 const Appointment = require("../models/Appointment");
 const AppointmentSlot = require("../models/AppointmentSlot");
+const appointmentDateValidation = require("../utils/appointmentDateValidator");
 
 const createAppointment = async (req, res) => {
     try {
@@ -63,9 +64,9 @@ const createAppointment = async (req, res) => {
             message: dateValidationResult.message
         })
         }
-
+        let session;
         try {
-            const session = await Appointment.startSession();
+            session = await Appointment.startSession();
             await session.withTransaction( async () => {
                 //kod do wykonania
                 throw new Error("Nie udało się zapisać rezerwacji");

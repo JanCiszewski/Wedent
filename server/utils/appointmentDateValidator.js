@@ -13,7 +13,7 @@ const appointmentDateValidation = (date) => {
 
     const appointmentTimeInMinutes = appointmentDate.getHours() * 60 + appointmentDate.getMinutes();
 
-    if(appointmentTimeInMinutes < clinicAvailability.workingHours.openingTime || appointmentTimeInMinutes > clinicAvailability.workingHours.closingTime - clinicAvailability.interval) {
+    if(appointmentTimeInMinutes < clinicAvailability.workingHours.openingTime || (appointmentTimeInMinutes > clinicAvailability.workingHours.closingTime - clinicAvailability.interval)) {
         return ({isAvailable: false, message: "Gabinet nie pracuję w tej godzinie"})
     }
 
