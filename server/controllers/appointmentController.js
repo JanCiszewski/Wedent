@@ -1,10 +1,12 @@
+const { default: mongoose } = require("mongoose");
 const Appointment = require("../models/Appointment");
 const AppointmentSlot = require("../models/AppointmentSlot");
 const appointmentDateValidation = require("../utils/appointmentDateValidator");
 
 const createAppointment = async (req, res) => {
+    let session;
     try {
-
+        session = await mongoose.startSession();
         const {patientName, patientLastName, email, phoneNumber, service, date, notes} = req.body;
         const appointmentData = {
             patientName,
@@ -25,7 +27,6 @@ const createAppointment = async (req, res) => {
             "mikroskop",
             "konsultacja"
         ];
-
 
         if(typeof appointmentData.patientName !== "string" || appointmentData.patientName.trim().length === 0){
             return res.status(400).json({
@@ -64,48 +65,19 @@ const createAppointment = async (req, res) => {
             message: dateValidationResult.message
         })
         }
-        let session;
-        try {
-            session = await Appointment.startSession();
-            await session.withTransaction( async () => {
-                //kod do wykonania
-                throw new Error("Nie udało się zapisać rezerwacji");
 
-            })
-        } catch(error) {
-            //obsługa błęddu czyli wyśweitlenie odpowiedniego statusu HTTP oraz wiadomość
-        }
-        
-        finally {
-            await session.endSession();
-        }
+        await session.withTransaction( async () => {
+            const appointment = new Appointment(appointmentData)
+            const existingSlot = await AppointmentSlot.findOneAndUpdate({date: appointmentData.date, status: "available"}, {status: "booked", appointmentId: appointment._id}, {returnDocument: "after", session})
+            if(!existingSlot) {
+                const error = new Error("Termin jest już zajęty");
+                error.code = "APPOINTMENT_SLOT_CONFLICT";
+                throw error;
+            }
+            await appointment.save({session})
 
-
-
-        const existingSlot = await AppointmentSlot.findOneAndUpdate({date: appointmentData.date, status: "available"}, {status: "booked"}, {returnDocument: "after"})
-
-        if(!existingSlot) {
-            return res.status(400).json({
-            message: "Nie udało się zarezerwować tego terminu"
         })
-        }
 
-
-        const dateSearchParameters = {
-            date: appointmentData.date,
-            status: { $in: ["confirmed", "pending"] }
-        }
-
-        const existingAppointment = await Appointment.findOne(dateSearchParameters);
-
-        if(existingAppointment) {
-            return res.status(400).json({
-            message: "Termin wizyty jest już zajęty"
-        })
-        }
-
-        const appointment = new Appointment(appointmentData)
-        await appointment.save()
         return res.status(201).json({
             message: "Rezerwacja została utworzona pomyślnie",
             appointment
@@ -118,11 +90,20 @@ const createAppointment = async (req, res) => {
         })
         }
 
+        if (error.code === "APPOINTMENT_SLOT_CONFLICT") {
+            return res.status(409).json({ message: error.message });
+        }
+
         console.error(error);
         return res.status(500).json({
             message: "Błąd serwera"
         })
+    } finally {
+            if (session){
+                await session.endSession();
+            }
     }
+        
 }
 
 module.exports = {
